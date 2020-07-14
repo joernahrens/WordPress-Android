@@ -9,16 +9,19 @@ import org.wordpress.android.BuildConfig
 import org.wordpress.android.R
 import org.wordpress.android.fluxc.store.AccountStore
 import org.wordpress.android.util.AppLog.T
+import org.wordpress.android.util.helpers.logfile.LogFileProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val EXTRA_UUID = "uuid"
 private const val EVENT_BUS_MODULE = "org.greenrobot.eventbus"
 private const val EVENT_BUS_EXCEPTION = "EventBusException"
 private const val EVENT_BUS_INVOKING_SUBSCRIBER_FAILED_ERROR = "Invoking subscriber failed"
 
 @Singleton
 class CrashLogging @Inject constructor(
-    private val accountStore: AccountStore
+    private val accountStore: AccountStore,
+    private val encryptedLogging: EncryptedLogging
 ) {
     fun start(context: Context) {
         SentryAndroid.init(context) { options ->
@@ -27,7 +30,7 @@ class CrashLogging @Inject constructor(
             options.isEnableSessionTracking = true // Release Health tracking
             options.setBeforeSend { event, _ ->
 
-                if (!this.shouldSendEvents(context)) return@setBeforeSend null
+                //if (!this.shouldSendEvents(context)) return@setBeforeSend null
 
                 this.accountStore.account.apply {
                     val user = User()
@@ -48,6 +51,9 @@ class CrashLogging @Inject constructor(
                             event.exceptions.remove(lastException)
                         }
                     }
+                }
+                encryptedLogging.queueCurrentLog(LogFileProvider.fromContext(context))?.let { uuid ->
+                    event.setExtra(EXTRA_UUID, uuid)
                 }
                 event
             }

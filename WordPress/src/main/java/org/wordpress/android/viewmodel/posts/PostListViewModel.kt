@@ -131,6 +131,8 @@ class PostListViewModel @Inject constructor(
         if (isStarted) {
             return
         }
+        throw IllegalStateException("Testing encrypted logging integration, please ignore this crash " +
+                "or contact oguzkocer")
         this.photonHeight = photonHeight
         this.photonWidth = photonWidth
         connector = postListViewModelConnector
